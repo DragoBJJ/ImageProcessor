@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "target": "esnext", // lub inna wersja ECMAScript
+    "target": "esnext",
     "module": "CommonJS",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist", // Katalog wyjściowy dla skompilowanych plików
-    "rootDir": "./src" // Katalog źródłowy
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
-  "include": ["src/**/*"], // Wskazuje, które pliki mają być kompilowane
-  "exclude": ["node_modules", "**/*.spec.ts"] // Wyklucza niepotrzebne pliki
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
 }
