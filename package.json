@@ -6,14 +6,18 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts"
+    "dev": "npx ts-node src/index.ts",
+    "install-sharp": "npm install --ignore-scripts=false --foreground-scripts --verbose sharp"
   },
   "author": "Drago",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/axios": "^0.9.36",
     "@types/lodash": "^4.17.13",
+    "@types/mongoose": "^5.11.96",
     "@types/node": "^22.10.1",
+    "@types/sharp": "^0.31.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   },
@@ -21,6 +25,6 @@
     "axios": "^1.7.9",
     "lodash": "^4.17.21",
     "mongoose": "^8.8.4",
-    "sharp": "0.33.0"
+    "sharp": "^0.32.6"
   }
 }

@@ -1,8 +1,8 @@
-version: '3.8'
-
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - .:/usr/src/app
     environment:
@@ -10,6 +10,7 @@ services:
       - DEFAULT_BATCH_SIZE=10
     depends_on:
       - mongo
+    platform: linux/amd64
 
   mongo:
     image: mongo:latest

@@ -3,7 +3,7 @@ import fs from "fs";
 import {chunk} from "lodash";
 import {connect, model, Schema} from "mongoose";
 import path from "path";
-import sharp from "sharp";
+import sharp, {SharpOptions} from "sharp";
 
 type RawEntity = {
   url?: string | undefined;
@@ -18,6 +18,10 @@ interface IImage {
   index: number;
   thumbnail: Buffer;
 }
+
+type Response<T> = {
+  data: T;
+};
 
 const ImageSchema = new Schema<IImage>({
   id: {type: String, required: true},
@@ -91,9 +95,13 @@ class ImageProcessor {
     thumbnail: Buffer | null;
   }) {
     try {
-      const response = await axios.get(rawEntity.url || "", {
-        responseType: "arraybuffer",
-      });
+      const response: Response<SharpOptions> = await axios.get(
+        rawEntity.url || "",
+        {
+          responseType: "arraybuffer",
+        }
+      );
+
       const buffer = await sharp(response.data).resize(100, 100).toBuffer();
 
       rawEntity.thumbnail = buffer;
