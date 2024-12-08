@@ -1,23 +1,19 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: ./app
     volumes:
-      - .:/usr/src/app
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/drago
-      - DEFAULT_BATCH_SIZE=10
-    depends_on:
-      - mongo
-    platform: linux/amd64
+      - ./app:/service
 
-  mongo:
+    depends_on:
+      - mongodb
+
+  mongodb:
     image: mongo:latest
-    volumes:
-      - mongo_data:/data/db
+    container_name: mongodb
     ports:
       - "27017:27017"
+    volumes:
+      - mongodb:/data/db
 
 volumes:
-  mongo_data:
+  mongodb:
