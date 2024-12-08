@@ -3,6 +3,9 @@ services:
     build: ./app
     volumes:
       - ./app:/service
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DEFAULT_BATCH_SIZE=10
 
     depends_on:
       - mongodb
