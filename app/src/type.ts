@@ -6,11 +6,19 @@ export type ImageProcessorConfigType = {
 export type RawEntity = {
   index: number;
   id: string;
-  url: string;
+  url?: string;
   thumbnail: Buffer | null;
 };
 
-export type CsvResponseRowEntity = {
+export type ChunkType = {
+  index: string;
+} & RawEntity[];
+
+export type ThumbnailResponse = {
+  data: string | Buffer;
+};
+
+export type CsvResponseRawEntity = {
   index: number;
   id: string;
   url: string;
