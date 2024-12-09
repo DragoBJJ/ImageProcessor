@@ -8,9 +8,7 @@ export class CsvParser {
   }
 
   public parse(data: string): CsvResponseRawEntity[] {
-    if (!this.isValidInput(data)) {
-      return [];
-    }
+    if (!this.isValidInput(data)) return [];
 
     const rows = this.getRows(data);
     if (rows.length === 0) {
