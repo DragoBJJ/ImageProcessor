@@ -20,27 +20,33 @@ export class ImageProcessor {
     this.logger = console;
   }
 
+  private createRawEntity({index, id, url}: CsvResponseRawEntity) {
+    return {
+      index,
+      id,
+      url,
+      thumbnail: null,
+    };
+  }
+
   private getData(): RawEntity[] {
     const data = fs.readFileSync(this.config.filePath, "utf-8");
     const rows: CsvResponseRawEntity[] = this.parseCSV(data);
-    return rows.map((row) => ({
-      index: row.index,
-      id: row.id,
-      url: row.url,
-      thumbnail: null,
-    }));
+    return rows.map((row) => this.createRawEntity(row));
   }
 
   private async addNewImages(images: any[]) {
     await ImageModel.insertMany(images, {ordered: false});
   }
 
-  private chunkLogger(images: any, chunk: any) {
+  private displayChunkData(chunk: RawEntity[]) {
     const lastIndex = chunk.length - 1;
     const lastChunk = chunk[lastIndex];
-    this.logger.info(`Processed batch size: ${images.length}`);
+    console.log("--------------------");
+    this.logger.info(`Processed batch size: ${this.config.batchSize}`);
     this.logger.info(`Last processed index: ${lastChunk.index}`);
     this.logger.info(`Last processed ID: ${lastChunk.id}`);
+    console.log("--------------------");
   }
 
   private cleanMemory() {
@@ -55,16 +61,16 @@ export class ImageProcessor {
   }
 
   async start() {
-    const rawList = this.getData();
-    const chunks = await this.processChunks(rawList, this.config.batchSize);
-    console.log("All chunks processed", chunks);
+    const rawData = this.getData();
+    await this.processChunks(rawData, this.config.batchSize);
+    console.log("All chunks processed");
   }
 
   async processChunk(chunk: RawEntity[]) {
     return new Promise(async (resolve) => {
       const images = await this.createThumbnails(chunk);
       if (images.length) await this.addNewImages(images);
-      this.chunkLogger(images, chunk);
+      this.displayChunkData(chunk);
       this.cleanMemory();
       resolve(true);
     }).catch((error) => {
@@ -73,22 +79,20 @@ export class ImageProcessor {
   }
 
   private async createThumbnails(rawEntities: RawEntity[]) {
-    const tasks = rawEntities
-      .filter((rawEntity) => rawEntity.url)
-      .map((rawEntity) => this.getThumbnail(rawEntity));
-    return Promise.all(tasks).then((images) => images.filter(Boolean));
+    const tasks = rawEntities.map((rawEntity) => this.getThumbnail(rawEntity));
+    const images = await Promise.all(tasks);
+    return images.filter((image) => image !== null);
   }
 
-  async createThumbnail(rawEntity: RawEntity, buffer: Buffer) {
+  createThumbnail(rawEntity: RawEntity, buffer: Buffer) {
     rawEntity.thumbnail = buffer;
     delete rawEntity.url;
     return rawEntity;
   }
 
   async getThumbnail(rawEntity: RawEntity) {
-    if (!rawEntity.url) return;
     try {
-      const response: ThumbnailResponse = await axios.get(rawEntity.url, {
+      const response: ThumbnailResponse = await axios.get(rawEntity.url || "", {
         responseType: "arraybuffer",
       });
       const buffer = await sharp(response.data).resize(100, 100).toBuffer();

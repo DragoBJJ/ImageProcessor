@@ -3,6 +3,12 @@ export type ImageProcessorConfigType = {
   filePath: string;
 };
 
+export type CsvResponseRawEntity = {
+  index: number;
+  id: string;
+  url: string;
+};
+
 export type RawEntity = {
   index: number;
   id: string;
@@ -12,14 +18,14 @@ export type RawEntity = {
 
 export type ChunkType = {
   index: string;
-} & RawEntity[];
+} & RawEntity;
+
+export type ImageType = {
+  id: string;
+  index: number;
+  thumbnail: Buffer;
+};
 
 export type ThumbnailResponse = {
   data: string | Buffer;
-};
-
-export type CsvResponseRawEntity = {
-  index: number;
-  id: string;
-  url: string;
 };
