@@ -3,6 +3,7 @@ import fs from "fs";
 import {chunk} from "lodash";
 import mongoose from "mongoose";
 import sharp from "sharp";
+import {CsvParser} from "./csvParser";
 import {ImageSchema} from "./model";
 import {
   CsvResponseRawEntity,
@@ -15,9 +16,13 @@ mongoose.connect(process.env.MONGO_URI || "");
 const ImageModel = mongoose.model("Image", ImageSchema);
 
 export class ImageProcessor {
+  private readonly THUMBNAIL_SIZE = {width: 100, height: 100};
   private logger: Console;
+  private csvParser: CsvParser;
+
   constructor(private config: ImageProcessorConfigType) {
     this.logger = console;
+    this.csvParser = new CsvParser(this.logger);
   }
 
   private createRawEntity({index, id, url}: CsvResponseRawEntity) {
@@ -31,7 +36,7 @@ export class ImageProcessor {
 
   private getData(): RawEntity[] {
     const data = fs.readFileSync(this.config.filePath, "utf-8");
-    const rows: CsvResponseRawEntity[] = this.parseCSV(data);
+    const rows: CsvResponseRawEntity[] = this.csvParser.parse(data);
     return rows.map((row) => this.createRawEntity(row));
   }
 
@@ -39,7 +44,7 @@ export class ImageProcessor {
     await ImageModel.insertMany(images, {ordered: false});
   }
 
-  private displayChunkData(chunk: RawEntity[]) {
+  private displayChunkInfo(chunk: RawEntity[]) {
     const lastIndex = chunk.length - 1;
     const lastChunk = chunk[lastIndex];
     console.log("--------------------");
@@ -67,15 +72,14 @@ export class ImageProcessor {
   }
 
   async processChunk(chunk: RawEntity[]) {
-    return new Promise(async (resolve) => {
+    try {
       const images = await this.createThumbnails(chunk);
       if (images.length) await this.addNewImages(images);
-      this.displayChunkData(chunk);
+      this.displayChunkInfo(chunk);
       this.cleanMemory();
-      resolve(true);
-    }).catch((error) => {
+    } catch (error: any) {
       this.logger.error(`Error processing batch: ${error.message}`);
-    });
+    }
   }
 
   private async createThumbnails(rawEntities: RawEntity[]) {
@@ -95,7 +99,9 @@ export class ImageProcessor {
       const response: ThumbnailResponse = await axios.get(rawEntity.url || "", {
         responseType: "arraybuffer",
       });
-      const buffer = await sharp(response.data).resize(100, 100).toBuffer();
+      const buffer = await sharp(response.data)
+        .resize(this.THUMBNAIL_SIZE.width, this.THUMBNAIL_SIZE.height)
+        .toBuffer();
       return this.createThumbnail(rawEntity, buffer);
     } catch (error: any) {
       this.logger.error(
@@ -103,17 +109,5 @@ export class ImageProcessor {
       );
       return null;
     }
-  }
-
-  parseCSV(data: any) {
-    const rows = data.split("\n");
-    const headers = rows.shift().split(",");
-    return rows.map((row: any) => {
-      const values = row.split(",");
-      return headers.reduce((obj: any, header: any, index: any) => {
-        obj[header.trim()] = values[index]?.trim();
-        return obj;
-      }, {});
-    });
   }
 }
